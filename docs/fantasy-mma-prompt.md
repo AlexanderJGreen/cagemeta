@@ -106,3 +106,42 @@ The project is already scaffolded, but no app code has been written yet. Before 
 1. Inspect the existing setup (package.json, config files, folder layout, Tailwind/TypeScript config, any env files or Supabase setup) and give me a short summary of what's there.
 2. Work with the existing setup instead of re-scaffolding. Match its conventions (e.g., src/ directory or not), and only add or change config where needed, with a reason.
 3. Then begin Phase 1: define the TypeScript types and folder structure, explain the reasoning, and continue straight into building the mock data and pages.
+
+
+## Frontend design specifications
+
+### Overall direction
+Modern, minimal, and confident, with the feel of a fight broadcast graphics package or a premium sports app, not a SaaS template. Every screen should look deliberately designed for MMA. Avoid anything that reads as a generic AI-generated site.
+
+### Color
+- Dark-first. The app is dark by default; no light mode for now.
+- Background: near-black (e.g., #0A0A0B), with slightly lighter surfaces for cards and panels (e.g., #131316, #1C1C21).
+- Text: off-white for primary (e.g., #F4F4F5), muted gray for secondary.
+- One primary accent that pops: a hot fight red (e.g., #E5242C or similar). Use it sparingly: primary buttons, live indicators, active states, key highlights.
+- One secondary accent for data and wins/positive states (e.g., an electric lime or gold). Use even more sparingly.
+- Define all colors as design tokens (CSS variables / Tailwind theme), never hardcoded hex values in components.
+
+### Typography
+- Headings: a bold condensed display font with a fight-poster feel (e.g., Barlow Condensed or Oswald, via next/font).
+- Body: a clean modern sans (e.g., Geist or Inter).
+- Stats, records, and scores: tabular/monospace numerals so numbers line up (e.g., Geist Mono).
+- Use strong size contrast between headings and body. Uppercase is fine for short labels and fighter names.
+
+### Layout & components
+- Mobile-first, lots of breathing room, clear visual hierarchy.
+- Thin borders and subtle surface changes instead of heavy drop shadows.
+- Tight, consistent corner radius (small, not bubbly).
+- Data-dense screens (fight cards, stats, leaderboards) should be clean and scannable, like a sports broadcast stat overlay.
+- Fight cards should feel like a matchup: fighter A vs fighter B, side by side, with records and key stats facing off.
+- Subtle, fast motion only (hover states, small transitions). Nothing bouncy or slow.
+- Use a consistent icon set (e.g., lucide-react). No emojis as icons.
+
+### Avoid (generic AI look)
+- Purple/blue gradients, glowing blobs, glassmorphism everywhere
+- Generic "Welcome to [App]" hero sections with stock-style taglines
+- Grids of identical rounded cards with big shadows
+- Random gradient text, excessive badges, or decorative clutter
+- Placeholder fighter photos that look like stock images. Use clean initials/silhouette placeholders instead.
+
+### Process
+- Before building pages, set up the design tokens, fonts, and a small set of base UI components (button, card, badge, stat row, fighter avatar) so every page stays consistent.
