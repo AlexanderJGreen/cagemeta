@@ -31,7 +31,7 @@ Event-driven usage: drafts open before a card and lock server-side at fight or e
 - Mobile-first.
 
 ## Evidence on Hand
-Mock events, fights, fighters, leagues, picks and users in `src/lib/data/mock/`. No real fighter photography, no testimonials, no usage data. Do not fabricate any.
+Mock data in `src/lib/data/mock/` uses real UFC fighters on two real cards: UFC 334 (upcoming, Nov 14 2026) and UFC 300 (completed, with its real results). Records, reach and height come from public records as of Oct 2026; per-minute striking/takedown stats are approximations and per-fight stats are not sourced. League, users and picks are invented. No fighter photography, no testimonials, no usage data. Do not fabricate any.
 
 ## Product Principles
 - Fight outcomes drive the product; numbers (records, prices, points) must be fast to scan.

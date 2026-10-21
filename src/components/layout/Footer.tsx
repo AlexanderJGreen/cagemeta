@@ -48,7 +48,7 @@ export function Footer() {
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-4 text-xs text-ink-faint sm:flex-row sm:justify-between sm:px-6">
           <p>Points only. No real money, no betting.</p>
-          <p>Independent fan project. Not affiliated with any fight promotion. Fighters and results shown are sample data.</p>
+          <p>Independent fan project. Not affiliated with or endorsed by the UFC or any fighter. Stats are approximate.</p>
         </div>
       </div>
     </footer>
