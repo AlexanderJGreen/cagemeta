@@ -1,15 +1,32 @@
 @import "tailwindcss";
 
+/* Design tokens. Components reference these through the Tailwind theme below, never raw hex. */
 :root {
+  color-scheme: dark;
+
   --canvas: #0a0a0b;
   --surface: #131316;
   --surface-raised: #1c1c21;
-  --line: #28282e;
+  --line: #2a2a31;
+  --line-strong: #3b3b44;
+
   --ink: #f4f4f5;
-  --ink-dim: #8b8b93;
+  --ink-dim: #a0a0aa;
+  --ink-faint: #70707a;
+
   --accent: #e5242c;
-  --accent-ink: #f4f4f5;
-  --positive: #d4c441;
+  --accent-hot: #ff3a41;
+  --accent-ink: #ffffff;
+  --accent-wash: color-mix(in oklab, var(--accent) 14%, var(--canvas));
+
+  --positive: #c6f432;
+  --positive-ink: #0a0a0b;
+  --positive-wash: color-mix(in oklab, var(--positive) 12%, var(--canvas));
+
+  --radius: 3px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --nav-h: 3.5rem;
+  --tabbar-h: 3.75rem;
 }
 
 @theme inline {
@@ -17,19 +34,132 @@
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
   --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
   --color-accent: var(--accent);
+  --color-accent-hot: var(--accent-hot);
   --color-accent-ink: var(--accent-ink);
+  --color-accent-wash: var(--accent-wash);
   --color-positive: var(--positive);
-  --font-display: var(--font-oswald);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-positive-ink: var(--positive-ink);
+  --color-positive-wash: var(--positive-wash);
+
+  --font-display: var(--font-barlow-condensed), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 1px);
+}
+
+html {
+  background: var(--canvas);
+  scrollbar-color: var(--line-strong) var(--canvas);
+  scrollbar-width: thin;
 }
 
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  /* Room for the mobile tab bar plus the home-indicator inset. */
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
 }
 
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--positive);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* Native form controls follow the palette. */
+select,
+input {
+  color-scheme: dark;
+  accent-color: var(--accent);
+  caret-color: var(--accent);
+}
+
+/* Tabular numerals wherever numbers line up. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Fight-poster display voice: condensed, heavy, uppercase. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+
+/* Small uppercase label. Reads as a stat caption, not an eyebrow. */
+.caption {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* Broadcast signature: angled cut on the leading edge of a tag. */
+.cut-tag {
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.5rem) 100%, 0 100%);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.rise {
+  animation: rise 220ms var(--ease-out) both;
+}
+
+.live-dot {
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .live-dot {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

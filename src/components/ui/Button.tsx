@@ -2,14 +2,15 @@ import Link from "next/link";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 const variantClasses = {
-  primary: "bg-accent text-accent-ink hover:opacity-90",
-  secondary: "border border-line text-ink hover:border-accent/50",
+  primary: "bg-accent text-accent-ink hover:bg-accent-hot active:translate-y-px",
+  secondary: "border border-line-strong text-ink hover:border-ink-dim hover:bg-surface-raised",
+  ghost: "text-ink-dim hover:text-ink hover:bg-surface-raised",
 } as const;
 
 type Variant = keyof typeof variantClasses;
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 rounded px-4 py-2 font-display text-sm font-medium tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 font-display text-base font-bold uppercase tracking-wider transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40";
 
 export function Button({
   variant = "primary",

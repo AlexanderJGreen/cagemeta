@@ -22,3 +22,19 @@ export function formatOdds(odds: number | undefined): string {
   if (odds === undefined) return "—";
   return odds > 0 ? `+${odds}` : `${odds}`;
 }
+
+export function formatDayMonth(iso: string): { day: string; month: string } {
+  const d = new Date(iso);
+  return {
+    day: d.toLocaleDateString("en-US", { day: "numeric" }),
+    month: d.toLocaleDateString("en-US", { month: "short" }),
+  };
+}
+
+export function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}

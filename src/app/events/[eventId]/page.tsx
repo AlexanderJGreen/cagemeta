@@ -34,10 +34,10 @@ export default async function EventDetailPage({
   const league = leagues[0];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title={event.name}
-        subtitle={`${formatEventDate(event.date)} · ${event.location.venue}, ${event.location.city}`}
+        title={event.name.split(": ")[1] ?? event.name}
+        subtitle={`${event.name.split(": ")[0]} · ${formatEventDate(event.date)} · ${event.location.venue}, ${event.location.city}`}
         action={
           event.status === "upcoming" && league ? (
             <LinkButton href={`/leagues/${league.id}/draft/${event.id}`}>Draft your card</LinkButton>

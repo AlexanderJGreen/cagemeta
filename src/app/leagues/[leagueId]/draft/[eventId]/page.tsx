@@ -44,10 +44,10 @@ export default async function DraftPage({
   });
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
-        title={`Draft: ${event.name}`}
-        subtitle={`${league.name} · pick up to ${league.maxDraftPicks} fighters, one per bout, within budget`}
+        title={`Draft: ${event.shortName}`}
+        subtitle={`${league.name} · ${event.name.split(": ")[1] ?? event.name} · up to ${league.maxDraftPicks} fighters, one per bout`}
       />
       <DraftBoard bouts={bouts} budget={league.budget} maxPicks={league.maxDraftPicks} />
     </div>
