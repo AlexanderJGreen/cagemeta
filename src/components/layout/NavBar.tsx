@@ -2,10 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navLinks } from "./nav-links";
+import { getNavLinks } from "./nav-links";
+import { logout } from "@/app/(auth)/actions";
 
-export function NavBar() {
+export function NavBar({
+  leagueId,
+  displayName,
+}: {
+  leagueId?: string;
+  /** Present when signed in. */
+  displayName?: string;
+}) {
   const pathname = usePathname();
+  const links = getNavLinks(leagueId);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur-sm">
@@ -24,10 +33,10 @@ export function NavBar() {
         </Link>
 
         <ul className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => {
+          {links.map((link) => {
             const active = link.match(pathname);
             return (
-              <li key={link.href}>
+              <li key={link.label}>
                 <Link
                   href={link.href}
                   aria-current={active ? "page" : undefined}
@@ -44,6 +53,37 @@ export function NavBar() {
             );
           })}
         </ul>
+
+        <div className="flex items-center gap-2">
+          {displayName ? (
+            <>
+              <span className="hidden max-w-32 truncate text-sm text-ink-dim sm:inline">{displayName}</span>
+              <form action={logout}>
+                <button
+                  type="submit"
+                  className="inline-flex min-h-11 items-center px-2 font-display text-base font-semibold uppercase tracking-wider text-ink-dim transition-colors hover:text-ink"
+                >
+                  Log out
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center px-2 font-display text-base font-semibold uppercase tracking-wider text-ink-dim transition-colors hover:text-ink"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="inline-flex min-h-9 items-center rounded-sm bg-accent px-3 font-display text-base font-bold uppercase tracking-wider text-accent-ink transition-colors hover:bg-accent-hot"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
+        </div>
       </nav>
     </header>
   );

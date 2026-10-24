@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getLeagueById } from "@/lib/data/leagues";
-import { currentUserId } from "@/lib/data/mock/users";
+import { requireUser } from "@/lib/auth/session";
 import { getLeagueStandings } from "@/lib/standings";
 import { StandingsList } from "@/components/features/leagues/StandingsList";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -12,6 +12,7 @@ export default async function LeaderboardPage({
   params: Promise<{ leagueId: string }>;
 }) {
   const { leagueId } = await params;
+  const user = await requireUser(`/leagues/${leagueId}/leaderboard`);
   const league = await getLeagueById(leagueId);
   if (!league) notFound();
 
@@ -26,7 +27,7 @@ export default async function LeaderboardPage({
         }
       />
       {standings ? (
-        <StandingsList rows={standings.rows} currentUserId={currentUserId} />
+        <StandingsList rows={standings.rows} currentUserId={user.id} />
       ) : (
         <EmptyState
           title="No scored events yet"

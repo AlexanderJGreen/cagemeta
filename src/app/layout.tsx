@@ -3,6 +3,9 @@ import { Barlow_Condensed, Geist, Geist_Mono } from "next/font/google";
 import { NavBar } from "@/components/layout/NavBar";
 import { TabBar } from "@/components/layout/TabBar";
 import { Footer } from "@/components/layout/Footer";
+import { getNavLinks } from "@/components/layout/nav-links";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getLeaguesForUser } from "@/lib/data/leagues";
 import "./globals.css";
 
 const barlowCondensed = Barlow_Condensed({
@@ -31,7 +34,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser();
+  const leagues = user ? await getLeaguesForUser(user.id) : [];
+  const leagueId = leagues[0]?.id;
+
   return (
     <html
       lang="en"
@@ -44,12 +51,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <NavBar />
+        <NavBar leagueId={leagueId} displayName={user?.displayName} />
         <main id="main" className="flex-1">
           {children}
         </main>
-        <Footer />
-        <TabBar />
+        <Footer links={getNavLinks(leagueId)} />
+        <TabBar leagueId={leagueId} />
       </body>
     </html>
   );

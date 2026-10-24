@@ -1,22 +1,44 @@
 import type { Fight, FightResult } from "@/types";
-import { mockFights } from "./mock/fights";
-import { mockFightResults } from "./mock/fight-results";
+import { db, isUuid, unwrap } from "./db";
+import { toFight, toFightResult, type FightResultRow, type FightRow } from "./mappers";
+
+// Stats hang off the fight, not the result, so they're embedded through the fights relation.
+const RESULT_SELECT = "*, fights!inner(event_id, fight_fighter_stats(*))";
 
 export async function getFightsByEventId(eventId: string): Promise<Fight[]> {
-  return mockFights
-    .filter((f) => f.eventId === eventId)
-    .sort((a, b) => a.boutOrder - b.boutOrder);
+  const supabase = await db();
+  const rows = unwrap(
+    await supabase.from("fights").select("*").eq("event_id", eventId).order("bout_order"),
+    "fights",
+  ) as FightRow[];
+  return rows.map(toFight);
 }
 
 export async function getFightById(id: string): Promise<Fight | undefined> {
-  return mockFights.find((f) => f.id === id);
+  if (!isUuid(id)) return undefined;
+  const supabase = await db();
+  const row = unwrap(
+    await supabase.from("fights").select("*").eq("id", id).maybeSingle(),
+    "fight",
+  ) as FightRow | null;
+  return row ? toFight(row) : undefined;
 }
 
 export async function getFightResult(fightId: string): Promise<FightResult | undefined> {
-  return mockFightResults.find((r) => r.fightId === fightId);
+  if (!isUuid(fightId)) return undefined;
+  const supabase = await db();
+  const row = unwrap(
+    await supabase.from("fight_results").select(RESULT_SELECT).eq("fight_id", fightId).maybeSingle(),
+    "fight result",
+  ) as FightResultRow | null;
+  return row ? toFightResult(row) : undefined;
 }
 
 export async function getFightResultsByEventId(eventId: string): Promise<FightResult[]> {
-  const fightIds = new Set(mockFights.filter((f) => f.eventId === eventId).map((f) => f.id));
-  return mockFightResults.filter((r) => fightIds.has(r.fightId));
+  const supabase = await db();
+  const rows = unwrap(
+    await supabase.from("fight_results").select(RESULT_SELECT).eq("fights.event_id", eventId),
+    "fight results",
+  ) as FightResultRow[];
+  return rows.map(toFightResult);
 }

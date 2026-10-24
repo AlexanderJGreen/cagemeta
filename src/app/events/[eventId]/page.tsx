@@ -4,7 +4,7 @@ import { getFightsByEventId, getFightResultsByEventId } from "@/lib/data/fights"
 import { getFightersByIds } from "@/lib/data/fighters";
 import { getPricesForEvent } from "@/lib/data/fighter-prices";
 import { getLeaguesForUser } from "@/lib/data/leagues";
-import { currentUserId } from "@/lib/data/mock/users";
+import { getCurrentUser } from "@/lib/auth/session";
 import { FightRow } from "@/components/features/events/FightRow";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LinkButton } from "@/components/ui/Button";
@@ -19,11 +19,12 @@ export default async function EventDetailPage({
   const event = await getEventById(eventId);
   if (!event) notFound();
 
+  const user = await getCurrentUser();
   const [fights, prices, results, leagues] = await Promise.all([
     getFightsByEventId(event.id),
     getPricesForEvent(event.id),
     getFightResultsByEventId(event.id),
-    getLeaguesForUser(currentUserId),
+    user ? getLeaguesForUser(user.id) : Promise.resolve([]),
   ]);
 
   const fighterIds = fights.flatMap((f) => [f.fighterAId, f.fighterBId]);
