@@ -1,15 +1,29 @@
 import type { Fighter } from "@/types";
-import { mockFighters } from "./mock/fighters";
+import { db, isUuid, unwrap } from "./db";
+import { toFighter, type FighterRow } from "./mappers";
 
 export async function getFighters(): Promise<Fighter[]> {
-  return mockFighters;
+  const supabase = await db();
+  const rows = unwrap(await supabase.from("fighters").select("*"), "fighters") as FighterRow[];
+  return rows.map(toFighter);
 }
 
 export async function getFighterById(id: string): Promise<Fighter | undefined> {
-  return mockFighters.find((f) => f.id === id);
+  if (!isUuid(id)) return undefined;
+  const supabase = await db();
+  const row = unwrap(
+    await supabase.from("fighters").select("*").eq("id", id).maybeSingle(),
+    "fighter",
+  ) as FighterRow | null;
+  return row ? toFighter(row) : undefined;
 }
 
 export async function getFightersByIds(ids: string[]): Promise<Fighter[]> {
-  const idSet = new Set(ids);
-  return mockFighters.filter((f) => idSet.has(f.id));
+  if (ids.length === 0) return [];
+  const supabase = await db();
+  const rows = unwrap(
+    await supabase.from("fighters").select("*").in("id", ids),
+    "fighters",
+  ) as FighterRow[];
+  return rows.map(toFighter);
 }

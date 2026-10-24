@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navLinks } from "./nav-links";
+import { getNavLinks } from "./nav-links";
 
-export function TabBar() {
+export function TabBar({ leagueId }: { leagueId?: string }) {
   const pathname = usePathname();
+  const links = getNavLinks(leagueId);
 
   return (
     <nav
@@ -14,11 +15,11 @@ export function TabBar() {
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <ul className="grid h-[var(--tabbar-h)] grid-cols-4">
-        {navLinks.map((link) => {
+        {links.map((link) => {
           const active = link.match(pathname);
           const Icon = link.icon;
           return (
-            <li key={link.href}>
+            <li key={link.label}>
               <Link
                 href={link.href}
                 aria-current={active ? "page" : undefined}

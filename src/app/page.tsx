@@ -4,7 +4,7 @@ import { getEvents } from "@/lib/data/events";
 import { getFightsByEventId } from "@/lib/data/fights";
 import { getFightersByIds } from "@/lib/data/fighters";
 import { getLeaguesForUser } from "@/lib/data/leagues";
-import { currentUserId } from "@/lib/data/mock/users";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getLeagueStandings } from "@/lib/standings";
 import { EventCard } from "@/components/features/events/EventCard";
 import { StandingsList } from "@/components/features/leagues/StandingsList";
@@ -14,7 +14,12 @@ import { StatusTag } from "@/components/ui/StatusTag";
 import { formatEventDate } from "@/lib/format";
 
 export default async function Home() {
-  const [events, leagues] = await Promise.all([getEvents(), getLeaguesForUser(currentUserId)]);
+  const user = await getCurrentUser();
+  const currentUserId = user?.id;
+  const [events, leagues] = await Promise.all([
+    getEvents(),
+    user ? getLeaguesForUser(user.id) : Promise.resolve([]),
+  ]);
   const nextEvent = events.find((e) => e.status !== "completed");
   const league = leagues[0];
 

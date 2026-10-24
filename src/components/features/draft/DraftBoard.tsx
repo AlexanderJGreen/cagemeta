@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Check, Lock } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Check, Save } from "lucide-react";
+import { saveDraft } from "@/app/leagues/[leagueId]/draft/[eventId]/actions";
 import { formatFighterName, formatRecord } from "@/lib/format";
 import { BudgetMeter } from "./BudgetMeter";
+import { FinishCallPicker, type FinishCallDraft } from "./FinishCallPicker";
 import { Button } from "@/components/ui/Button";
 import type { Fighter, FighterPrice } from "@/types";
 
@@ -15,27 +17,43 @@ export interface DraftBout {
   priceA: FighterPrice;
   fighterB: Fighter;
   priceB: FighterPrice;
+  scheduledRounds: number;
+  /** Picks on this bout can no longer change. Decided on the server; the server re-checks on save. */
+  locked: boolean;
 }
 
-type OptionState = "open" | "selected" | "opponent-picked" | "roster-full" | "over-budget";
+type OptionState = "open" | "selected" | "locked" | "opponent-picked" | "roster-full" | "over-budget";
 
 const blockedLabel: Record<Exclude<OptionState, "open" | "selected">, string> = {
+  locked: "Locked",
   "opponent-picked": "Opponent picked",
   "roster-full": "Roster full",
   "over-budget": "Over budget",
 };
 
 export function DraftBoard({
+  leagueId,
+  eventId,
   bouts,
   budget,
   maxPicks,
+  initialSelected,
+  initialFinishCall,
+  finishCallBonus,
 }: {
+  leagueId: string;
+  eventId: string;
   bouts: DraftBout[];
   budget: number;
   maxPicks: number;
+  initialSelected: string[];
+  initialFinishCall?: FinishCallDraft;
+  finishCallBonus: number;
 }) {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [submitted, setSubmitted] = useState(false);
+  const [selected, setSelected] = useState<string[]>(initialSelected);
+  const [finishCall, setFinishCall] = useState<FinishCallDraft | undefined>(initialFinishCall);
+  const [status, setStatus] = useState<{ saved: boolean; errors: string[] }>({ saved: false, errors: [] });
+  const [saving, startSaving] = useTransition();
 
   const priceByFighterId = useMemo(() => {
     const map = new Map<string, number>();
@@ -68,7 +86,10 @@ export function DraftBoard({
   const remaining = budget - spent;
   const picksFull = selected.length >= maxPicks;
 
-  function stateOf(fighterId: string, opponentId: string): OptionState {
+  const lockedFightIds = useMemo(() => new Set(bouts.filter((b) => b.locked).map((b) => b.fightId)), [bouts]);
+
+  function stateOf(fighterId: string, opponentId: string, fightId: string): OptionState {
+    if (lockedFightIds.has(fightId)) return selected.includes(fighterId) ? "selected" : "locked";
     if (selected.includes(fighterId)) return "selected";
     if (selected.includes(opponentId)) return "opponent-picked";
     if (picksFull) return "roster-full";
@@ -77,7 +98,11 @@ export function DraftBoard({
   }
 
   function toggle(fighterId: string) {
-    setSubmitted(false);
+    setStatus({ saved: false, errors: [] });
+    const inLockedBout = bouts.some(
+      (b) => b.locked && (b.fighterA.id === fighterId || b.fighterB.id === fighterId),
+    );
+    if (inLockedBout) return;
     setSelected((prev) => {
       if (prev.includes(fighterId)) return prev.filter((id) => id !== fighterId);
       const opponentId = fighterToOpponent.get(fighterId);
@@ -90,10 +115,18 @@ export function DraftBoard({
     });
   }
 
-  const lockButton = (
-    <Button type="button" disabled={selected.length === 0} onClick={() => setSubmitted(true)}>
-      <Lock className="h-4 w-4" aria-hidden />
-      Lock in picks
+  function save() {
+    setStatus({ saved: false, errors: [] });
+    startSaving(async () => {
+      const result = await saveDraft({ leagueId, eventId, fighterIds: selected, finishCall });
+      setStatus(result.ok ? { saved: true, errors: [] } : { saved: false, errors: result.errors });
+    });
+  }
+
+  const saveButton = (
+    <Button type="button" disabled={saving} onClick={save}>
+      <Save className="h-4 w-4" aria-hidden />
+      {saving ? "Saving…" : "Save picks"}
     </Button>
   );
 
@@ -113,20 +146,31 @@ export function DraftBoard({
               <FighterOption
                 fighter={bout.fighterA}
                 price={bout.priceA.price}
-                state={stateOf(bout.fighterA.id, bout.fighterB.id)}
+                state={stateOf(bout.fighterA.id, bout.fighterB.id, bout.fightId)}
+                locked={bout.locked}
                 align="left"
                 onToggle={() => toggle(bout.fighterA.id)}
               />
               <FighterOption
                 fighter={bout.fighterB}
                 price={bout.priceB.price}
-                state={stateOf(bout.fighterB.id, bout.fighterA.id)}
+                state={stateOf(bout.fighterB.id, bout.fighterA.id, bout.fightId)}
+                locked={bout.locked}
                 align="right"
                 onToggle={() => toggle(bout.fighterB.id)}
               />
             </div>
           </fieldset>
         ))}
+        <FinishCallPicker
+          bouts={bouts}
+          value={finishCall}
+          bonus={finishCallBonus}
+          onChange={(next) => {
+            setStatus({ saved: false, errors: [] });
+            setFinishCall(next);
+          }}
+        />
       </div>
 
       {/* Desktop: sticky roster panel. */}
@@ -139,8 +183,8 @@ export function DraftBoard({
           Roster <span className="num text-ink">{selected.length}</span> / {maxPicks}
         </p>
         <RosterList selected={selected} fighterById={fighterById} priceByFighterId={priceByFighterId} />
-        {lockButton}
-        <LockedNote submitted={submitted} />
+        {saveButton}
+        <SaveStatus status={status} />
       </aside>
 
       {/* Mobile: summary bar pinned above the tab bar. */}
@@ -159,9 +203,9 @@ export function DraftBoard({
             </p>
             <p className="caption">Picks</p>
           </div>
-          {lockButton}
+          {saveButton}
         </div>
-        {submitted ? <LockedNote submitted /> : null}
+        <SaveStatus status={status} />
       </div>
     </div>
   );
@@ -195,11 +239,16 @@ function RosterList({
   );
 }
 
-function LockedNote({ submitted }: { submitted: boolean }) {
+function SaveStatus({ status }: { status: { saved: boolean; errors: string[] } }) {
   return (
-    <p role="status" className={`text-xs text-positive ${submitted ? "mt-2" : "sr-only"}`}>
-      {submitted ? "Picks locked in locally. Server-side saving arrives in Phase 2." : ""}
-    </p>
+    <div role="status" aria-live="polite" className={status.saved || status.errors.length ? "mt-2" : "sr-only"}>
+      {status.saved ? <p className="text-xs text-positive">Picks saved.</p> : null}
+      {status.errors.map((message) => (
+        <p key={message} className="text-xs text-accent-hot">
+          {message}
+        </p>
+      ))}
+    </div>
   );
 }
 
@@ -207,24 +256,27 @@ function FighterOption({
   fighter,
   price,
   state,
+  locked,
   align,
   onToggle,
 }: {
   fighter: Fighter;
   price: number;
   state: OptionState;
+  locked: boolean;
   align: "left" | "right";
   onToggle: () => void;
 }) {
   const selected = state === "selected";
   const blocked = state !== "open" && state !== "selected";
+  const pinned = selected && locked;
   const right = align === "right";
 
   return (
     <button
       type="button"
       onClick={onToggle}
-      disabled={blocked}
+      disabled={blocked || pinned}
       aria-pressed={selected}
       className={`relative flex min-h-32 flex-col gap-0.5 p-3 transition-colors duration-150 ${
         right ? "items-end text-right" : "items-start text-left"
@@ -247,6 +299,7 @@ function FighterOption({
         {price}
         <span className="text-sm text-ink-dim"> cr</span>
       </span>
+      {pinned ? <span className="text-[0.6875rem] text-ink-dim">Locked in</span> : null}
       {blocked ? <span className="text-[0.6875rem] text-ink-dim">{blockedLabel[state]}</span> : null}
     </button>
   );

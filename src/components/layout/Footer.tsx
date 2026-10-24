@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { navLinks } from "./nav-links";
+import type { NavLink } from "./nav-links";
 
-export function Footer() {
+export function Footer({ links }: { links: NavLink[] }) {
   return (
     <footer className="mt-16 border-t border-line bg-surface">
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1fr_auto] md:items-start">
@@ -23,8 +23,8 @@ export function Footer() {
 
         <nav aria-label="Footer" className="hidden md:block">
           <ul className="flex gap-6">
-            {navLinks.map((link) => (
-              <li key={link.href}>
+            {links.map((link) => (
+              <li key={link.label}>
                 <Link
                   href={link.href}
                   className="font-display text-base font-semibold uppercase tracking-wider text-ink-dim transition-colors hover:text-ink"
